@@ -16,7 +16,7 @@ Rustサーバーの実装とDockerfileは `asonas/syncstr` の `server/` にあ�
 | `/mnt/data/syncstr/secrets/upload-token` | `/storage/secrets/upload-token` | 専用トークン。読み取り専用 |
 
 UID/GIDは `1000:1000` です。フォルダとトークンは事前に用意します。
-存在しないホストパスは自動作成しません。トークンのマウント元はディレクトリではなく通常ファイルです。
+存在しないホストパスは自動作成しません。secretsディレクトリを読み取り専用でマウントし、その中に通常ファイルのupload-tokenを置きます。
 musicとupload-stagingは同じファイルシステムに置き、両方へ書き込みを許可してください。
 hard linkによる確定を可能にするため、共通の親 `/mnt/data/syncstr` を1つのbind mountにします。
 個別のbind mountでは同じファイルシステム上でもCross-device linkになります。
@@ -34,14 +34,34 @@ Navidromeのmusicマウントは読み取り専用を維持します。
 3. CoolifyでGitリポジトリからApplicationを追加し、配備先にNASを選ぶ。
 4. Build PackをDocker Compose、Base Directoryを `/`、Docker Compose Locationを `/docker-compose.yml` にする。
 5. 必要に応じて `SYNCSTR_SOURCE_REF` に手順1の40文字のコミットSHAを設定する。未指定時はComposeに固定された実装コミットを使用する。可変のブランチ名は使用しない。
-6. CoolifyのDomainsは空にしたままDeployする。BuildKitが公開Syncstrリポジトリの指定コミットからビルドする。
-7. 生成されたコンテナのユーザー、マウント元、書き込み権限、localhostだけへのポート公開を確認する。
+6. Raw Compose Deploymentを有効にし、CoolifyのDomainsは空にしたままDeployする。公開Syncstrリポジトリの指定コミットからビルドする。Raw Composeを無効にすると、NASのCoolifyではsecretsマウントのread_only指定が失われることを確認している。
+7. 生成されたコンテナのユーザー、マウント元、secretsの読み取り専用状態、localhostだけへのポート公開を確認する。
 8. NAS上のCloudflare Tunnelに `syncstr-uploader.jkte.ch` → `http://127.0.0.1:4545` の経路を追加する。
 9. Syncstrのアップロード先に `https://syncstr-uploader.jkte.ch` と専用トークンを設定する。
 
 `.env.example` はローカルで設定を確認する際のひな形です。Coolifyでは管理画面の環境変数に設定します。
 Dockerfileはソースリポジトリにあるものを使用するため、このリポジトリには置きません。
 独自コンテナ名・ネットワーク名は設定していません。Coolifyで管理する構成を別途 `docker compose up` で起動しないでください。
+
+## 配備状況
+
+2026-10-02にNASへ配備済みです。
+
+- Coolify application: `lvwy4ac7qhuny179zn7inok6`（NAS / production）
+- Raw Compose Deployment: 有効
+- 公開URL: `https://syncstr-uploader.jkte.ch`
+- Cloudflare Tunnelの既存経路を維持し、アップロード専用の経路とDNSを追加
+- HTTPS経由で201、認証拒否401、同名拒否409、音声形式・SHA-256不一致422を確認
+- NAS上の保存結果のSHA-256一致、検証音源の削除、一時ファイルが残らないことを確認
+- NavidromeでのスキャンとSyncstrでの再生は、この配備確認には含まない
+
+NASのCoolify APIはRaw Composeの変更項目を受け付けないため、初回は対象applicationのsettingsモデルを管理コマンドから更新しました。再配備時もこの設定を維持してください。
+
+専用トークンはNAS上だけに保存しています。端末に設定するときは、信頼できる端末で取得します。
+
+```sh
+ssh nas 'cat /mnt/data/syncstr/secrets/upload-token'
+```
 
 ## アップロードの契約
 
