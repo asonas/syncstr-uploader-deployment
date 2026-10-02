@@ -12,7 +12,7 @@ Rustサーバーの実装とDockerfileは `asonas/syncstr` の `server/` にあ�
 | NAS上のパス | コンテナ内 | 用途 |
 | --- | --- | --- |
 | `/mnt/data/syncstr/music` | `/storage/music` | 検証後の音源。書き込み可能 |
-| `/mnt/data/syncstr/upload-staging` | `/storage/staging` | 受信・形式検証中のファイル |
+| `/mnt/data/syncstr/upload-staging` | `/storage/upload-staging` | 受信・形式検証中のファイル |
 | `/mnt/data/syncstr/secrets/upload-token` | `/storage/secrets/upload-token` | 専用トークン。読み取り専用 |
 
 UID/GIDは `1000:1000` です。フォルダとトークンは事前に用意します。

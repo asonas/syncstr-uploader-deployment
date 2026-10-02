@@ -15,7 +15,7 @@ services:
     environment:
       SYNCSTR_TOKEN_FILE: /storage/secrets/upload-token
       SYNCSTR_MUSIC_DIR: /storage/music
-      SYNCSTR_STAGING_DIR: /storage/staging
+      SYNCSTR_STAGING_DIR: /storage/upload-staging
       SYNCSTR_MAX_UPLOAD_BYTES: "100000000"
     volumes:
       - type: bind
