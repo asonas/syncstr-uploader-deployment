@@ -4,7 +4,7 @@ NAS上のSyncstrアップローダーをCoolifyのDocker Composeアプリとし�
 デプロイ用リポジトリ名は `asonas/syncstr-uploader-deployment`、公開URLは `https://syncstr-uploader.jkte.ch` を使用します。
 
 Rustサーバーの実装とDockerfileは `asonas/syncstr` の `server/` にあります。
-このリポジトリにはComposeと運用手順を置き、DockerのGit build contextから指定コミットの実装を取得します。
+このリポジトリにはCompose、CA対策用のビルド手順、運用手順を置き、DockerのGit build contextから指定コミットの実装を取得します。
 実装のコピーやトークン、音源をこのリポジトリに保存しません。
 
 ## 保存先
@@ -40,7 +40,7 @@ Navidromeのmusicマウントは読み取り専用を維持します。
 9. Syncstrのアップロード先に `https://syncstr-uploader.jkte.ch` と専用トークンを設定する。
 
 `.env.example` はローカルで設定を確認する際のひな形です。Coolifyでは管理画面の環境変数に設定します。
-Dockerfileはソースリポジトリにあるものを使用するため、このリポジトリには置きません。
+今回のCA事故への対応として、Composeの `dockerfile_inline` に上流のビルド手順とCA除去処理を置いています。`dockerfile_inline` 対応のComposeが必要です。アプリのソースと依存ロックは固定コミットのままです。上流のDockerfileでもemSign G3とAAAの信頼経路が除去されたことを確認してから、この上書きを外します。
 独自コンテナ名・ネットワーク名は設定していません。Coolifyで管理する構成を別途 `docker compose up` で起動しないでください。
 
 ## 配備状況

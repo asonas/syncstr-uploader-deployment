@@ -2,6 +2,19 @@ services:
   syncstr-uploader:
     build:
       context: "https://github.com/asonas/syncstr.git#${SYNCSTR_SOURCE_REF:-57b3d8cdfa498404795b9f7c96fe9f21c4196102}:server"
+      dockerfile_inline: |
+        FROM rust:1.98-bookworm AS build
+        WORKDIR /app
+        COPY Cargo.toml Cargo.lock ./
+        COPY src ./src
+        RUN cargo build --release --locked
+        FROM debian:bookworm-slim
+        RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certificates && rm -f /usr/share/ca-certificates/mozilla/emSign_ECC_Root_CA_-_G3.crt /usr/share/ca-certificates/mozilla/Comodo_AAA_Services_root.crt && update-ca-certificates --fresh && rm -rf /var/lib/apt/lists/*
+        COPY --from=build /app/target/release/syncstr-upload /usr/local/bin/syncstr-upload
+        USER 1000:1000
+        ENV SYNCSTR_BIND=0.0.0.0:4545
+        EXPOSE 4545
+        ENTRYPOINT ["syncstr-upload"]
     user: "1000:1000"
     restart: unless-stopped
     read_only: true
